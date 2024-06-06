@@ -1,0 +1,33 @@
+stages:
+  - setup
+  - triggers
+
+generate-config:
+  stage: setup
+  script:
+    - act=$(echo "$ACT" | tr '[:upper:]' '[:lower:]')
+    - env=$(echo "$ENV" | tr '[:upper:]' '[:lower:]')
+    - pod=$(echo "$POD" | tr '[:upper:]' '[:lower:]')
+    - echo "$act - $env - $pod"
+    - | 
+        sed -e "s/PLACEHOLDER_STAGE/${act}_${pod}_${env}/g" \
+          -e "s/PLACEHOLDER_JOB/${pod}_${env}/g" \
+          -e "s/ACT_PH/${ACT}/g" \
+          -e "s/ENV_PH/${env}/g" \
+          -e "s/POD_PH/${pod}/g" \
+          template-gitlab-ci.yml > dynamic-gitlab-ci.yml
+    - cat dynamic-gitlab-ci.yml
+  artifacts:
+    paths:
+      - dynamic-gitlab-ci.yml
+  rules:
+    - if: '$ACT =~ /^(GET|LOG|RESTART)$/ && $ENV =~ /^(sit|dev|ams|uat)$/ && $POD'
+
+trigger-config:
+  stage: triggers
+  trigger:
+    include:
+      - artifact: dynamic-gitlab-ci.yml
+        job: generate-config
+  rules:
+    - if: '$ACT =~ /^(GET|LOG|RESTART)$/ && $ENV =~ /^(sit|dev|ams|uat)$/ && $POD'
