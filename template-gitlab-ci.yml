@@ -1,0 +1,116 @@
+workflow:
+  rules:
+    - if: $ENV == "sit"
+      variables:
+        MS_namespace: payit-modernization-sit
+    - if: $ENV == "dev"
+      variables:
+        MS_namespace: payit-modernization-dev
+    - if: $ENV == "ams"
+      variables:
+        MS_namespace: payit-modernization-ams
+    - if: $ENV == "uat"
+      variables:
+        MS_namespace: payit-modernization-uat
+    - when: always
+
+stages:
+  - PLACEHOLDER_STAGE
+
+variables:
+  ACT: ACT_PH
+  ENV: ENV_PH
+  POD: POD_PH
+
+get_PLACEHOLDER_JOB:
+  stage: PLACEHOLDER_STAGE
+  image: ${HostedReg5000}/helm-kubectl-docker:latest
+  environment:
+    name: ${ENV}
+    kubernetes: 
+      namespace: ${MS_namespace}
+  script:
+    - | 
+        kubectl config get-contexts
+        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b" | awk '{print $1}')
+        RS_NAME=`kubectl describe deployment $DEPLOY_NAME -n ${MS_namespace} | grep "^NewReplicaSet"|awk '{print $2}'`
+        POD_HASH_LABEL=`kubectl get rs $RS_NAME -n ${MS_namespace} -o jsonpath="{.metadata.labels.pod-template-hash}"`
+        POD_NAMES=`kubectl get pods -n ${MS_namespace} -l pod-template-hash=$POD_HASH_LABEL --show-labels | tail -n +2 | awk '{print $1}'`
+        UNFILTERED_DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b")
+        echo "----"
+        echo "Showing $POD deployment:"
+        echo $UNFILTERED_DEPLOY_NAME
+        echo "----"
+        echo "Showing $POD pods:"
+        kubectl get pods -n ${MS_namespace} | grep $POD_HASH_LABEL
+        echo "----"
+  rules:
+    - if: '$ACT == "GET" && $POD && $ENV =~ /^(sit|dev|ams|uat)$/'
+      when: always
+    - when: never
+
+restart_PLACEHOLDER_JOB:
+  stage: PLACEHOLDER_STAGE
+  image: ${HostedReg5000}/helm-kubectl-docker:latest
+  environment:
+    name: ${ENV}
+    kubernetes: 
+      namespace: ${MS_namespace}
+  script:
+    - |
+        kubectl config get-contexts
+        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b" | awk '{print $1}')
+        RS_NAME=`kubectl describe deployment $DEPLOY_NAME -n ${MS_namespace} | grep "^NewReplicaSet"|awk '{print $2}'`
+        POD_HASH_LABEL=`kubectl get rs $RS_NAME -n ${MS_namespace} -o jsonpath="{.metadata.labels.pod-template-hash}"`
+        POD_NAMES=`kubectl get pods -n ${MS_namespace} -l pod-template-hash=$POD_HASH_LABEL --show-labels | tail -n +2 | awk '{print $1}'`
+
+        for POD_NAME in $POD_NAMES;
+        do
+            echo "Deleting $POD_NAME"
+            kubectl delete pod $POD_NAME
+        done
+
+        kubectl rollout restart deployment ${DEPLOY_NAME} -n ${MS_namespace}
+        UNFILTERED_DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b")
+        echo "Showing $POD deployment:"
+        echo $UNFILTERED_DEPLOY_NAME && echo
+        sleep 40 && echo "Showing $POD pods:" && kubectl get pods -n ${MS_namespace} | grep $POD_HASH_LABEL
+  rules:
+    - if: '$ACT == "RESTART" && $POD && $ENV =~ /^(sit|dev|ams|uat)$/'
+      when: always
+    - when: never
+
+log_PLACEHOLDER_JOB:
+  stage: PLACEHOLDER_STAGE
+  image: ${HostedReg5000}/helm-kubectl-docker:latest
+  environment:
+    name: ${ENV}
+    kubernetes: 
+      namespace: ${MS_namespace}
+  script:
+    - | 
+        kubectl config get-contexts
+        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b" | awk '{print $1}')
+        RS_NAME=`kubectl describe deployment $DEPLOY_NAME -n ${MS_namespace} | grep "^NewReplicaSet"|awk '{print $2}'`
+        POD_HASH_LABEL=`kubectl get rs $RS_NAME -n ${MS_namespace} -o jsonpath="{.metadata.labels.pod-template-hash}"`
+        POD_NAMES=`kubectl get pods -n ${MS_namespace} -l pod-template-hash=$POD_HASH_LABEL --show-labels | tail -n +2 | awk '{print $1}'`
+        UNFILTERED_DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b")
+        echo "----"
+        echo "Showing $POD deployment:"
+        echo $UNFILTERED_DEPLOY_NAME
+        echo "----"
+        echo "Showing $POD pods:"
+        kubectl get pods -n ${MS_namespace} | grep $POD_HASH_LABEL
+        echo "----"
+        echo "Showing $POD pod logs:"
+        pod=$(kubectl get pods -n ${MS_namespace} | grep $POD_HASH_LABEL | awk 'NR==1{print $1}')
+        kubectl describe pod $pod -n ${MS_namespace}
+        kubectl logs $pod -n ${MS_namespace}
+        echo "----"
+  rules:
+    - if: '$ACT == "LOG" && $POD && $ENV =~ /^(sit|dev|ams|uat)$/'
+      when: always
+    - when: never
