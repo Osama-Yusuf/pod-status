@@ -2,16 +2,16 @@ workflow:
   rules:
     - if: $ENV == "sit"
       variables:
-        MS_namespace: payit-modernization-sit
+        MS_namespace: eks-cluster-sit
     - if: $ENV == "dev"
       variables:
-        MS_namespace: payit-modernization-dev
+        MS_namespace: eks-cluster-dev
     - if: $ENV == "ams"
       variables:
-        MS_namespace: payit-modernization-ams
+        MS_namespace: eks-cluster-ams
     - if: $ENV == "uat"
       variables:
-        MS_namespace: payit-modernization-uat
+        MS_namespace: eks-cluster-uat
     - when: always
 
 stages:
