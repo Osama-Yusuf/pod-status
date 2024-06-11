@@ -32,7 +32,7 @@ get_PLACEHOLDER_JOB:
   script:
     - | 
         kubectl config get-contexts
-        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        kubectl config use-context digital-wallet/agent:dw-agent
         DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b" | awk '{print $1}')
         RS_NAME=`kubectl describe deployment $DEPLOY_NAME -n ${MS_namespace} | grep "^NewReplicaSet"|awk '{print $2}'`
         POD_HASH_LABEL=`kubectl get rs $RS_NAME -n ${MS_namespace} -o jsonpath="{.metadata.labels.pod-template-hash}"`
@@ -60,7 +60,7 @@ restart_PLACEHOLDER_JOB:
   script:
     - |
         kubectl config get-contexts
-        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        kubectl config use-context digital-wallet/agent:dw-agent
         DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b" | awk '{print $1}')
         RS_NAME=`kubectl describe deployment $DEPLOY_NAME -n ${MS_namespace} | grep "^NewReplicaSet"|awk '{print $2}'`
         POD_HASH_LABEL=`kubectl get rs $RS_NAME -n ${MS_namespace} -o jsonpath="{.metadata.labels.pod-template-hash}"`
@@ -92,7 +92,7 @@ log_PLACEHOLDER_JOB:
   script:
     - | 
         kubectl config get-contexts
-        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        kubectl config use-context digital-wallet/agent:dw-agent
         DEPLOY_NAME=$(kubectl get deploy -n ${MS_namespace} | grep "\b${POD}\b" | awk '{print $1}')
         RS_NAME=`kubectl describe deployment $DEPLOY_NAME -n ${MS_namespace} | grep "^NewReplicaSet"|awk '{print $2}'`
         POD_HASH_LABEL=`kubectl get rs $RS_NAME -n ${MS_namespace} -o jsonpath="{.metadata.labels.pod-template-hash}"`
@@ -125,7 +125,7 @@ get_vars_PLACEHOLDER_JOB:
   script:
     - | 
         kubectl config get-contexts
-        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        kubectl config use-context digital-wallet/agent:dw-agent
         POD_NAME=$(kubectl get pods -n ${MS_namespace} | grep "\b${POD}\b" | awk 'NR==1{print $1}')
         echo "Retrieving environment variables from pod $POD_NAME:"
         kubectl exec $POD_NAME -n ${MS_namespace} -- printenv
