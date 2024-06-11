@@ -21,7 +21,7 @@ generate-config:
     paths:
       - dynamic-gitlab-ci.yml
   rules:
-    - if: '$ACT =~ /^(GET|LOG|RESTART)$/ && $ENV =~ /^(sit|dev|ams|uat)$/ && $POD'
+    - if: '$ACT =~ /^(GET|LOG|RESTART|GET_VARS)$/ && $ENV =~ /^(sit|dev|ams|uat)$/ && $POD'
 
 trigger-config:
   stage: triggers
@@ -30,4 +30,4 @@ trigger-config:
       - artifact: dynamic-gitlab-ci.yml
         job: generate-config
   rules:
-    - if: '$ACT =~ /^(GET|LOG|RESTART)$/ && $ENV =~ /^(sit|dev|ams|uat)$/ && $POD'
+    - if: '$ACT =~ /^(GET|LOG|RESTART|GET_VARS)$/ && $ENV =~ /^(sit|dev|ams|uat)$/ && $POD'
