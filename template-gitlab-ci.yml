@@ -114,3 +114,22 @@ log_PLACEHOLDER_JOB:
     - if: '$ACT == "LOG" && $POD && $ENV =~ /^(sit|dev|ams|uat)$/'
       when: always
     - when: never
+
+get_vars_PLACEHOLDER_JOB:
+  stage: ENV_VARS_STAGE
+  image: ${HostedReg5000}/helm-kubectl-docker:latest
+  environment:
+    name: ${ENV}
+    kubernetes: 
+      namespace: ${MS_namespace}
+  script:
+    - | 
+        kubectl config get-contexts
+        kubectl config use-context digital-wallet/kas-agent:dw-sit-agent
+        POD_NAME=$(kubectl get pods -n ${MS_namespace} | grep "\b${POD}\b" | awk 'NR==1{print $1}')
+        echo "Retrieving environment variables from pod $POD_NAME:"
+        kubectl exec $POD_NAME -n ${MS_namespace} -- printenv
+  rules:
+    - if: '$ACT == "GET_VARS" && $POD && $ENV =~ /^(sit|dev|ams|uat)$/'
+      when: always
+    - when: never
